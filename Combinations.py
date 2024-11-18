@@ -17,3 +17,5 @@ result = row_combinations(data, r=3)  # Combinations of size 3 for each row
 print("Row-wise combinations:")
 for row_result in result:
     print(row_result)
+
+print("nigger")
