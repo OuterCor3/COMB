@@ -49,8 +49,8 @@ python -m pip install --upgrade pip >> install_log.txt 2>&1
 python -m pip install tkinter pynput requests >> install_log.txt 2>&1
 
 :: Check if combinations.py exists before copying
-if exist "%~dp0combinations.py" (
-    echo combinations.py found. >> install_log.txt
+if exist "%~dp0Combinations.py" (
+    echo Combinations.py found. >> install_log.txt
 ) else (
     echo Error: combinations.py not found in the current directory. >> install_log.txt
     pause
@@ -72,7 +72,7 @@ del CreateShortcut.vbs
 
 :: Run the application
 echo Starting the application... >> install_log.txt
-start pythonw "%~dp0combinations.py"
+start pythonw "%~dp0Combinations.py"
 
 echo Installation completed successfully! >> install_log.txt
 pause
