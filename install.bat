@@ -54,7 +54,7 @@ if exist "%~dp0combinations.py" (
 ) else (
     echo Error: combinations.py not found in the current directory. >> install_log.txt
     pause
-    exit /B 1 
+    exit /B 1
 )
 
 :: Create desktop shortcut
@@ -62,7 +62,7 @@ echo Creating desktop shortcut... >> install_log.txt
 echo Set oWS = WScript.CreateObject("WScript.Shell") > CreateShortcut.vbs
 echo sLinkFile = oWS.ExpandEnvironmentStrings("%USERPROFILE%\Desktop\Column Combinations Generator.lnk") >> CreateShortcut.vbs
 echo Set oLink = oWS.CreateShortcut(sLinkFile) >> CreateShortcut.vbs
-echo oLink.TargetPath = "python.exe" >> CreateShortcut.vbs
+echo oLink.TargetPath = "pythonw.exe" >> CreateShortcut.vbs
 echo oLink.Arguments = """%~dp0combinations.py""" >> CreateShortcut.vbs
 echo oLink.WorkingDirectory = "%~dp0" >> CreateShortcut.vbs
 echo oLink.Description = "Column Combinations Generator" >> CreateShortcut.vbs
@@ -72,7 +72,7 @@ del CreateShortcut.vbs
 
 :: Run the application
 echo Starting the application... >> install_log.txt
-start python "%~dp0combinations.py"
+start pythonw "%~dp0combinations.py"
 
 echo Installation completed successfully! >> install_log.txt
 pause
