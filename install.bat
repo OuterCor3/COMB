@@ -48,11 +48,11 @@ echo Installing required packages... >> install_log.txt
 python -m pip install --upgrade pip >> install_log.txt 2>&1
 python -m pip install tkinter pynput requests >> install_log.txt 2>&1
 
-:: Check if combinations.py exists before copying
+:: Check if Combinations.py exists before copying
 if exist "%~dp0Combinations.py" (
     echo Combinations.py found. >> install_log.txt
 ) else (
-    echo Error: combinations.py not found in the current directory. >> install_log.txt
+    echo Error: Combinations.py not found in the current directory. >> install_log.txt
     pause
     exit /B 1
 )
@@ -63,7 +63,7 @@ echo Set oWS = WScript.CreateObject("WScript.Shell") > CreateShortcut.vbs
 echo sLinkFile = oWS.ExpandEnvironmentStrings("%USERPROFILE%\Desktop\Column Combinations Generator.lnk") >> CreateShortcut.vbs
 echo Set oLink = oWS.CreateShortcut(sLinkFile) >> CreateShortcut.vbs
 echo oLink.TargetPath = "pythonw.exe" >> CreateShortcut.vbs
-echo oLink.Arguments = """%~dp0combinations.py""" >> CreateShortcut.vbs
+echo oLink.Arguments = """%~dp0Combinations.py""" >> CreateShortcut.vbs
 echo oLink.WorkingDirectory = "%~dp0" >> CreateShortcut.vbs
 echo oLink.Description = "Column Combinations Generator" >> CreateShortcut.vbs
 echo oLink.Save >> CreateShortcut.vbs
@@ -76,3 +76,4 @@ start pythonw "%~dp0Combinations.py"
 
 echo Installation completed successfully! >> install_log.txt
 pause
+
