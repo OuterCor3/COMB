@@ -11,12 +11,6 @@ if '%errorlevel%' == '0' ( goto START ) else ( goto getAdmin )
 
 :getAdmin
 echo Requesting administrative privileges... >> install_log.txt
-echo Set UAC = CreateObject^("Shell.Application"^) > "%temp%\getadmin.vbs"
-set params = %*:"=""
-echo UAC.ShellExecute "cmd.exe", "/c ""%~s0"" %params%", "", "runas", 1 >> "%temp%\getadmin.vbs"
-"%temp%\getadmin.vbs"
-del "%temp%\getadmin.vbs"
-exit /B
 
 :START
 echo Checking for Python installation... >> install_log.txt
@@ -89,4 +83,4 @@ echo Starting the application... >> install_log.txt
 start pythonw "%~dp0combinations.py"
 
 echo Installation completed successfully! >> install_log.txt
-pause
+pauseause
