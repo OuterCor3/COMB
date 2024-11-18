@@ -5,14 +5,6 @@ color 0A
 :: Log file for debugging
 echo Starting script... > install_log.txt
 
-:: Check for admin privileges
-NET FILE 1>NUL 2>NUL
-if '%errorlevel%' == '0' ( goto START ) else ( goto getAdmin )
-
-:getAdmin
-echo Requesting administrative privileges... >> install_log.txt
-
-:START
 echo Checking for Python installation... >> install_log.txt
 
 :: Check if Python is installed
@@ -83,4 +75,4 @@ echo Starting the application... >> install_log.txt
 start pythonw "%~dp0combinations.py"
 
 echo Installation completed successfully! >> install_log.txt
-pauseause
+pause
