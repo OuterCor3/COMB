@@ -1,6 +1,7 @@
 import tkinter as tk
-from tkinter import simpledialog, scrolledtext
+from tkinter import simpledialog, scrolledtext, filedialog
 from itertools import product
+import csv
 
 class ColumnCombinations:
     def __init__(self, master):
@@ -36,18 +37,36 @@ class ColumnCombinations:
 
         tk.Button(self.master, text="Generate Combinations", command=self.generate_combinations).grid(row=1, column=0, columnspan=len(self.columns), pady=10, sticky="ew")
 
+        # Button to save combinations as CSV
+        tk.Button(self.master, text="Save as CSV", command=self.save_to_csv).grid(row=1, column=len(self.columns), padx=5, pady=10, sticky="ew")
+
         self.result_text = scrolledtext.ScrolledText(self.master, width=50, height=20)
         self.result_text.grid(row=2, column=0, columnspan=len(self.columns), padx=10, pady=10, sticky="nsew")
 
     def generate_combinations(self):
         self.combinations = list(product(*self.row_contents))  # Generate cartesian product of rows
-
         self.display_combinations()
 
     def display_combinations(self):
         self.result_text.delete('1.0', tk.END)
         for combo in self.combinations:
             self.result_text.insert(tk.END, f"{' + '.join(combo)}\n")
+
+    def save_to_csv(self):
+        # Open a save file dialog to choose the location and file name
+        file_path = filedialog.asksaveasfilename(defaultextension=".csv", filetypes=[("CSV Files", "*.csv"), ("All Files", "*.*")])
+        if file_path:
+            try:
+                with open(file_path, mode='w', newline='', encoding='utf-8') as file:
+                    writer = csv.writer(file)
+                    # Write the header (column names)
+                    writer.writerow(self.columns)
+                    # Write the combinations
+                    for combo in self.combinations:
+                        writer.writerow(combo)
+                tk.messagebox.showinfo("Success", f"Combinations saved to {file_path}")
+            except Exception as e:
+                tk.messagebox.showerror("Error", f"An error occurred while saving the file: {e}")
 
 if __name__ == "__main__":
     root = tk.Tk()
