@@ -2,6 +2,7 @@
 TITLE Python Installer and Application Launcher
 color 0A
 
+:: Check for admin privileges
 NET FILE 1>NUL 2>NUL
 if '%errorlevel%' == '0' ( goto START ) else ( goto getAdmin )
 
