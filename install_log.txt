@@ -2,9 +2,7 @@ Starting script...
 Checking for Python installation... 
 Python is already installed. 
 Installing required packages... 
-Defaulting to user installation because normal site-packages is not writeable
-Requirement already satisfied: pip in c:\users\gonlu\appdata\roaming\python\python39\site-packages (24.3.1)
-Defaulting to user installation because normal site-packages is not writeable
+Requirement already satisfied: pip in c:\users\gonlu\appdata\local\programs\python\python313\lib\site-packages (24.3.1)
 ERROR: Could not find a version that satisfies the requirement tkinter (from versions: none)
 ERROR: No matching distribution found for tkinter
 Combinations.py found. 
