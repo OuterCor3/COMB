@@ -13,7 +13,7 @@ if errorlevel 1 (
     echo Python is not installed. Installing Python... >> install_log.txt
     
     :: Download Python installer
-    powershell -Command "(New-Object Net.WebClient).DownloadFile('https://www.python.org/ftp/python/3.9.7/python-3.9.7-amd64.exe', 'python_installer.exe')"
+    powershell -Command "(New-Object Net.WebClient).DownloadFile('https://www.python.org/ftp/python/3.13.0/python-3.13.0-amd64.exe', 'python_installer.exe')"
     
     if not exist python_installer.exe (
         echo Failed to download Python installer. >> install_log.txt
@@ -76,4 +76,3 @@ start pythonw "%~dp0Combinations.py"
 
 echo Installation completed successfully! >> install_log.txt
 pause
-
